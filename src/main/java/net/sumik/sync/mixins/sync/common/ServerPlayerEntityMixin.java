@@ -428,37 +428,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
             this.connection.teleport(x, y, z, yaw, pitch);
             return;
         }
-
-        ServerLevel serverWorld = this.serverLevel();
         ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
-
-        serverPlayer.connection.send(new ClientboundRespawnPacket(
-                targetWorld.dimensionTypeId(),
-                targetWorld.dimension(),
-                BiomeManager.obfuscateSeed(targetWorld.getSeed()),
-                serverPlayer.gameMode.getGameModeForPlayer(),
-                serverPlayer.gameMode.getPreviousGameModeForPlayer(),
-                targetWorld.isDebug(),
-                targetWorld.isFlat(),
-                (byte)1,
-                this.getLastDeathLocation(),
-                3
-        ));
-        serverPlayer.connection.send(new ClientboundChangeDifficultyPacket(targetWorld.getDifficulty(), targetWorld.getLevelData().isDifficultyLocked()));
-        PlayerList playerManager = Objects.requireNonNull(this.level().getServer()).getPlayerList();
-        playerManager.sendPlayerPermissionLevel(serverPlayer);
-        serverWorld.removePlayerImmediately(serverPlayer, RemovalReason.CHANGED_DIMENSION);
-        this.unsetRemoved();
-        serverPlayer.setServerLevel(targetWorld);
-        targetWorld.addDuringPortalTeleport(serverPlayer);
-        this.connection.teleport(x, y, z, yaw, pitch);
-        this.triggerDimensionChangeTriggers(targetWorld);
-        serverPlayer.connection.send(new ClientboundPlayerAbilitiesPacket(serverPlayer.getAbilities()));
-        playerManager.sendLevelInfo(serverPlayer, targetWorld);
-        playerManager.sendAllPlayerInfo(serverPlayer);
-        for (MobEffectInstance effectInstance : this.getActiveEffects()) {
-            this.connection.send(new ClientboundUpdateMobEffectPacket(this.getId(), effectInstance));
-        }
-        this.triggerDimensionChangeTriggers(targetWorld);
+        serverPlayer.teleportTo(targetWorld, x, y, z, Set.of(), yaw, pitch);
     }
 }
