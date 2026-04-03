@@ -18,8 +18,25 @@ public final class SyncPackets {
     );
 
     private static int packetId = 0;
+    private static boolean initialized = false;
 
     public static void init() {
+        registerPackets();
+    }
+
+    @OnlyIn(Dist.CLIENT)
+    public static void initClient() {
+        registerPackets();
+    }
+
+    private static void registerPackets() {
+        if (initialized) {
+            return;
+        }
+
+        initialized = true;
+        packetId = 0;
+
         CHANNEL.registerMessage(
                 packetId++,
                 SynchronizationRequestPacket.class,
@@ -31,10 +48,7 @@ public final class SyncPackets {
                 },
                 (packet, contextSupplier) -> packet.handle(contextSupplier.get())
         );
-    }
 
-    @OnlyIn(Dist.CLIENT)
-    public static void initClient() {
         CHANNEL.registerMessage(
                 packetId++,
                 ShellUpdatePacket.class,
