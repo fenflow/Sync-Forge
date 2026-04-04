@@ -280,10 +280,6 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
     @Inject(method = "die", at = @At("HEAD"), cancellable = true)
     private void onDeath(DamageSource source, CallbackInfo ci) {
-        if (!this.isArtificial) {
-            return;
-        }
-
         ShellState respawnShell = this.shellsById.values().stream().filter(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE).findAny().orElse(null);
         if (respawnShell == null) {
             return;
@@ -311,7 +307,8 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
     @Override
     public boolean updateKillableEntityPostDeath() {
         this.deathTime = Mth.clamp(++this.deathTime, 0, 20);
-        if (this.isArtificial && this.shellsById.values().stream().anyMatch(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE)) {
+        boolean hasRespawnShell = this.shellsById.values().stream().anyMatch(x -> this.canBeApplied(x) && x.getProgress() >= ShellState.PROGRESS_DONE);
+        if (this.undead && hasRespawnShell) {
             return true;
         }
 
@@ -426,6 +423,7 @@ abstract class ServerPlayerEntityMixin extends Player implements ServerShell, Ki
 
         if (this.level() == targetWorld) {
             this.connection.teleport(x, y, z, yaw, pitch);
+            this.isChangingDimension = false;
             return;
         }
         ServerPlayer serverPlayer = (ServerPlayer)(Object)this;
